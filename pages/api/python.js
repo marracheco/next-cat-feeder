@@ -10,7 +10,7 @@ export default (req, res) => {
   const { file } = body;
 
   if (file) {
-    accessPythonFile(file)
+    accessPythonFile(file, res)
   }
   
   res.statusCode = 200
