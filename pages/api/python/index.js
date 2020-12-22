@@ -1,4 +1,4 @@
-// import accessPythonFile from "../../lib/accessPythonFile"
+const { spawn } = require('child_process')
 
 export default (req, res) => {
   let largeDataSet = []
