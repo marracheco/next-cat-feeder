@@ -1,65 +1,311 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useState, useEffect } from "react";
+import {
+  ListGroup,
+  Button,
+  Spinner,
+  Toast,
+  Modal,
+  Form,
+  Col,
+} from "react-bootstrap";
+import cronstrue from "cronstrue";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
+
+import Layout from "../components/Layout";
+
+const hourOptions = [
+  { value: "1", label: "1" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+  { value: "4", label: "4" },
+  { value: "5", label: "5" },
+  { value: "6", label: "6" },
+  { value: "7", label: "7" },
+  { value: "8", label: "8" },
+  { value: "9", label: "9" },
+  { value: "10", label: "10" },
+  { value: "11", label: "11" },
+  { value: "12", label: "12" },
+];
+
+const minuteOptions = [
+  { value: "0", label: "00" },
+  { value: "15", label: "15" },
+  { value: "30", label: "30" },
+  { value: "45", label: "45" },
+];
+
+const amPmOptions = [
+  { value: "0", label: "AM" },
+  { value: "12", label: "PM" },
+];
+
+const weekdayOptions = [
+  { value: "1", label: "Monday" },
+  { value: "2", label: "Tuesday" },
+  { value: "3", label: "Wednesday" },
+  { value: "4", label: "Thursday" },
+  { value: "5", label: "Friday" },
+  { value: "6", label: "Saturday" },
+  { value: "0", label: "Sunday" },
+];
+
+const defaultValues = {
+  name: "",
+  weekday: [weekdayOptions[0], weekdayOptions[1]],
+  hour: [hourOptions[8]],
+  minute: [minuteOptions[2]],
+  amPm: [amPmOptions[1]],
+};
 
 export default function Home() {
+  const [items, setItems] = useState();
+  const [message, setMessage] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const {
+    handleSubmit,
+    control,
+    watch,
+    clearErrors,
+    setError,
+    errors,
+    formState: { isSubmitting, touched },
+  } = useForm({
+    defaultValues,
+  });
+
+  const watchName = watch("name");
+  const watchWeekday = watch("weekday");
+
+  useEffect(() => {
+    if (!watchName?.length) {
+      setError("name", {
+        type: "manual",
+        message: "You have to enter a name right meow!",
+      });
+    } else {
+      clearErrors("name");
+    }
+
+    if (!watchWeekday?.length) {
+      setError("weekday", {
+        type: "manual",
+        message: "Select at least one day right meow!",
+      });
+    } else {
+      clearErrors("weekday");
+    }
+  }, [watchName, watchWeekday]);
+
+  useEffect(() => {
+    fetch("http://192.168.1.89:3001/schedule")
+      .then((res) => res.json())
+      .then((response) => {
+        setItems(response?.items);
+      });
+  }, []);
+
+  function handleCloseModal() {
+    setShowModal(false);
+  }
+  function handleShowModal() {
+    setShowModal(true);
+  }
+
+  function onSubmit(formData) {
+    const { minute, hour, amPm, weekday } = formData;
+
+    const minuteValue = minute?.[0]?.value || minute?.value;
+    const hourValue =
+      parseInt(hour?.[0]?.value || hour?.value) +
+      parseInt(amPm?.[0]?.value || amPm?.value);
+    const weekdays = weekday.reduce((a, c) => {
+      a.push(c.value);
+      return a;
+    }, []);
+
+    const weekdayValue = weekdays?.length ? weekdays : "*";
+
+    const data = {
+      name: formData.name,
+      schedule: `${minuteValue} ${hourValue} * * ${weekdayValue}`,
+    };
+
+    fetch("http://192.168.1.89:3001/schedule/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...data }),
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        setItems(response?.items);
+        handleCloseModal();
+        setMessage(`Successfully add ${data.name}`);
+      });
+  }
+
+  function feed() {
+    fetch("http://192.168.1.89:3001/feed")
+      .then((res) => res.json())
+      .then((response) => {
+        setMessage(response?.message);
+      });
+  }
+
+  function deleteSchedule(id) {
+    fetch("http://192.168.1.89:3001/schedule/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        setItems(response?.items);
+      });
+  }
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <Layout title="Homepage">
+      {!items?.length ? <hr className="mt-0" /> : null}
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+      <Toast
+        onClose={() => setMessage(null)}
+        show={!!message}
+        delay={3000}
+        autohide
+        className="bg-success mx-auto"
+      >
+        <Toast.Header>
+          <strong className="mr-auto text-success">{message}</strong>
+        </Toast.Header>
+      </Toast>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+      {!items ? (
+        <Spinner animation="border" role="status">
+          <span className="sr-only">Loading...</span>
+        </Spinner>
+      ) : items?.length ? (
+        <ListGroup className="my-4">
+          {items.map(function (item) {
+            return (
+              <ListGroup.Item key={item.id}>
+                <h2 className="h4 mb-1">{item.name}</h2>
+                <small>{cronstrue.toString(item.schedule)}</small>
+                <div className="mt-2 text-right">
+                  {/* <Button variant="secondary" size="sm">
+                    Edit
+                  </Button> */}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => deleteSchedule(item.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </ListGroup.Item>
+            );
+          })}
+        </ListGroup>
+      ) : null}
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+      <div className="text-center">
+        <Button variant="secondary" size="lg" onClick={handleShowModal}>
+          Add Schedule
+        </Button>
+        <Button variant="primary" size="lg" onClick={feed}>
+          Feed Meow!
+        </Button>
+      </div>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add Schedule</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSubmit(onSubmit)}>
+          <Modal.Body>
+            <Form.Group controlId="schedulForm.name">
+              <Form.Label>Name</Form.Label>
+              <Controller
+                as={<Form.Control type="text" />}
+                control={control}
+                name="name"
+              />
+              {errors?.name && touched?.name && (
+                <Form.Text className="text-danger">
+                  {errors.name?.message}
+                </Form.Text>
+              )}
+            </Form.Group>
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+            <Form.Group controlId="schedulForm.weekday">
+              <Form.Label>Days of the week</Form.Label>
+              <Controller
+                as={
+                  <Select
+                    options={weekdayOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
+                  />
+                }
+                control={control}
+                name="weekday"
+              />
+              {errors?.weekday && touched?.weekday && (
+                <Form.Text className="text-danger">
+                  {errors.weekday?.message}
+                </Form.Text>
+              )}
+            </Form.Group>
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+            <Form.Row>
+              <Form.Group as={Col} controlId="schedulForm.hour">
+                <Form.Label>Hour</Form.Label>
+                <Controller
+                  as={<Select options={hourOptions} />}
+                  control={control}
+                  name="hour"
+                />
+              </Form.Group>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+              <Form.Group as={Col} controlId="schedulForm.minute">
+                <Form.Label>Minute</Form.Label>
+                <Controller
+                  as={<Select options={minuteOptions} />}
+                  control={control}
+                  name="minute"
+                />
+              </Form.Group>
+
+              <Form.Group as={Col} controlId="schedulForm.amPm">
+                <Form.Label>AM/PM</Form.Label>
+                <Controller
+                  as={<Select options={amPmOptions} />}
+                  control={control}
+                  name="amPm"
+                />
+              </Form.Group>
+            </Form.Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="text" onClick={handleCloseModal}>
+              Close
+            </Button>
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={Object.keys(errors)?.length || isSubmitting}
+            >
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+    </Layout>
+  );
 }

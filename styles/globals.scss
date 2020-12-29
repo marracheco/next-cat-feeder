@@ -1,0 +1,20 @@
+$blue: #c9eded !default;
+$pink: #ffb3de !default;
+$yellow: #f3d078 !default;
+
+$primary: $blue !default;
+$secondary: $yellow !default;
+
+$indigo: #6610f2 !default;
+$purple: #6f42c1 !default;
+$red: #dc3545 !default;
+$orange: #fd7e14 !default;
+$green: #28a745 !default;
+$teal: #20c997 !default;
+$cyan: #17a2b8 !default;
+
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Pacifico&display=swap");
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+@import "./base";
+@import "./header";

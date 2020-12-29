@@ -1,0 +1,44 @@
+/* *****************
+ * HEADER
+ **************** */
+
+.header {
+  padding: 16px 0;
+  background: $pink;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  width: 50px;
+  height: 100%;
+  margin-right: 16px;
+}
+
+.title {
+  position: relative;
+  display: inline-block;
+  z-index: 2;
+
+  h1 {
+    font-weight: 900;
+    font-size: 32px;
+    margin: 0;
+    flex-grow: 1;
+
+    &::before {
+      content: "Fat Cat Feeder";
+      position: absolute;
+      top: 2px;
+      left: 1px;
+      z-index: -1;
+      color: $white;
+      text-shadow: -1px -1px 0 $black, 1px -1px 0 $black, -1px 1px 0 $black,
+        1px 1px 0 $black;
+    }
+  }
+}
