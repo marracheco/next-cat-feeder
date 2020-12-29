@@ -8,6 +8,10 @@ export default function Layout({ children, title }) {
     <>
       <Head>
         <title>{`${title} | Fat Cat Feeder`}</title>
+        <meta
+          http-equiv="Content-Security-Policy"
+          content="upgrade-insecure-requests"
+        ></meta>
       </Head>
 
       <Header />
