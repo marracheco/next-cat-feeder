@@ -99,7 +99,7 @@ export default function Home() {
   }, [watchName, watchWeekday]);
 
   useEffect(() => {
-    fetch("http://192.168.1.89:3001/schedule")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/schedule`)
       .then((res) => res.json())
       .then((response) => {
         setItems(response?.items);
@@ -132,7 +132,7 @@ export default function Home() {
       schedule: `${minuteValue} ${hourValue} * * ${weekdayValue}`,
     };
 
-    fetch("http://192.168.1.89:3001/schedule/add", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -148,7 +148,7 @@ export default function Home() {
   }
 
   function feed() {
-    fetch("http://192.168.1.89:3001/feed")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/feed`)
       .then((res) => res.json())
       .then((response) => {
         setMessage(response?.message);
@@ -156,7 +156,7 @@ export default function Home() {
   }
 
   function deleteSchedule(id) {
-    fetch("http://192.168.1.89:3001/schedule/delete", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/delete`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -219,7 +219,7 @@ export default function Home() {
           Add Schedule
         </Button>
         <Button variant="primary" size="lg" onClick={feed}>
-          Feed Meow!
+          Feed Right Meow!
         </Button>
       </div>
 
