@@ -52,8 +52,8 @@ const weekdayOptions = [
 ];
 
 const defaultValues = {
-  name: "",
-  weekday: [weekdayOptions[0], weekdayOptions[1]],
+  name: "test",
+  weekday: [weekdayOptions[6], weekdayOptions[0]],
   hour: [hourOptions[8]],
   minute: [minuteOptions[2]],
   amPm: [amPmOptions[1]],
@@ -67,7 +67,6 @@ export default function Home() {
     handleSubmit,
     control,
     watch,
-    clearErrors,
     setError,
     errors,
     formState: { isSubmitting, touched },
@@ -75,30 +74,8 @@ export default function Home() {
     defaultValues,
   });
 
-  const watchName = watch("name");
-  const watchWeekday = watch("weekday");
-
   useEffect(() => {
-    if (!watchName?.length) {
-      setError("name", {
-        type: "manual",
-        message: "You have to enter a name right meow!",
-      });
-    } else {
-      clearErrors("name");
-    }
-
-    if (!watchWeekday?.length) {
-      setError("weekday", {
-        type: "manual",
-        message: "Select at least one day right meow!",
-      });
-    } else {
-      clearErrors("weekday");
-    }
-  }, [watchName, watchWeekday]);
-
-  useEffect(() => {
+    // deleteSchedule("2b40b7f0-b84a-420e-bef8-5f6b62097a3e");
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/schedule`)
       .then((res) => res.json())
       .then((response) => {
@@ -114,7 +91,29 @@ export default function Home() {
   }
 
   function onSubmit(formData) {
-    const { minute, hour, amPm, weekday } = formData;
+    const watchName = watch("name");
+    const watchWeekday = watch("weekday");
+    let hasErrors = false;
+
+    if (!watchName?.length) {
+      setError("name", {
+        type: "manual",
+        message: "You have to enter a name right meow!",
+      });
+      hasErrors = true;
+    }
+
+    if (!watchWeekday?.length) {
+      setError("weekday", {
+        type: "manual",
+        message: "Select at least one day right meow!",
+      });
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
+
+    const { name, minute, hour, amPm, weekday } = formData;
 
     const minuteValue = minute?.[0]?.value || minute?.value;
     const hourValue =
@@ -128,11 +127,12 @@ export default function Home() {
     const weekdayValue = weekdays?.length ? weekdays : "*";
 
     const data = {
-      name: formData.name,
+      name,
+      // Cron format.
       schedule: `${minuteValue} ${hourValue} * * ${weekdayValue}`,
     };
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/add`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -147,16 +147,8 @@ export default function Home() {
       });
   }
 
-  function feed() {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/feed`)
-      .then((res) => res.json())
-      .then((response) => {
-        setMessage(response?.message);
-      });
-  }
-
   function deleteSchedule(id) {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/delete`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/delete`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -168,6 +160,15 @@ export default function Home() {
         setItems(response?.items);
       });
   }
+
+  // NOTE: For use only when hooked up to hardware.
+  // function feed() {
+  //   fetch(`${process.env.NEXT_PUBLIC_API_URL}/feed`)
+  //     .then((res) => res.json())
+  //     .then((response) => {
+  //       setMessage(response?.message);
+  //     });
+  // }
 
   return (
     <Layout title="Homepage">
@@ -186,9 +187,11 @@ export default function Home() {
       </Toast>
 
       {!items ? (
-        <Spinner animation="border" role="status">
-          <span className="sr-only">Loading...</span>
-        </Spinner>
+        <div className="spinner-wrapper">
+          <Spinner animation="border" role="status">
+            <span className="sr-only">Loading...</span>
+          </Spinner>
+        </div>
       ) : items?.length ? (
         <ListGroup className="my-4">
           {items.map(function (item) {
@@ -196,10 +199,10 @@ export default function Home() {
               <ListGroup.Item key={item.id}>
                 <h2 className="h4 mb-1">{item.name}</h2>
                 <small>{cronstrue.toString(item.schedule)}</small>
-                <div className="mt-2 text-right">
-                  <Button variant="secondary" size="sm">
+                <div className="action-buttons">
+                  {/* <Button variant="secondary" size="sm">
                     Edit
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="danger"
                     size="sm"
@@ -212,15 +215,20 @@ export default function Home() {
             );
           })}
         </ListGroup>
-      ) : null}
+      ) : (
+        <p className="text-center">
+          No schedule yet... You should make one! I'm hungry 😿
+        </p>
+      )}
 
       <div className="text-center">
         <Button variant="secondary" size="lg" onClick={handleShowModal}>
           Add Schedule
         </Button>
-        <Button variant="primary" size="lg" onClick={feed}>
+        {/* NOTE: For use only when hooked up to hardware. */}
+        {/* <Button variant="primary" size="lg" onClick={feed}>
           Feed Right Meow!
-        </Button>
+        </Button> */}
       </div>
 
       <Modal show={showModal} onHide={handleCloseModal}>
@@ -229,7 +237,7 @@ export default function Home() {
         </Modal.Header>
         <Form onSubmit={handleSubmit(onSubmit)}>
           <Modal.Body>
-            <Form.Group controlId="schedulForm.name">
+            <Form.Group controlId="scheduleForm.name">
               <Form.Label>Name</Form.Label>
               <Controller
                 as={<Form.Control type="text" />}
@@ -243,7 +251,7 @@ export default function Home() {
               )}
             </Form.Group>
 
-            <Form.Group controlId="schedulForm.weekday">
+            <Form.Group controlId="scheduleForm.weekday">
               <Form.Label>Days of the week</Form.Label>
               <Controller
                 as={
@@ -264,7 +272,7 @@ export default function Home() {
             </Form.Group>
 
             <Form.Row>
-              <Form.Group as={Col} controlId="schedulForm.hour">
+              <Form.Group as={Col} controlId="scheduleForm.hour">
                 <Form.Label>Hour</Form.Label>
                 <Controller
                   as={<Select options={hourOptions} />}
@@ -273,7 +281,7 @@ export default function Home() {
                 />
               </Form.Group>
 
-              <Form.Group as={Col} controlId="schedulForm.minute">
+              <Form.Group as={Col} controlId="scheduleForm.minute">
                 <Form.Label>Minute</Form.Label>
                 <Controller
                   as={<Select options={minuteOptions} />}
@@ -282,7 +290,7 @@ export default function Home() {
                 />
               </Form.Group>
 
-              <Form.Group as={Col} controlId="schedulForm.amPm">
+              <Form.Group as={Col} controlId="scheduleForm.amPm">
                 <Form.Label>AM/PM</Form.Label>
                 <Controller
                   as={<Select options={amPmOptions} />}
