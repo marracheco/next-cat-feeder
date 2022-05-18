@@ -2,6 +2,18 @@
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## List
+
+![List](https://github.com/marracheco/next-cat-feeder/blob/main/public/images/screenshots/list.png?raw=true)
+
+## Form
+
+![Form](https://github.com/marracheco/next-cat-feeder/blob/main/public/images/screenshots/form.png?raw=true)
+
+## Empty
+
+![Empty](https://github.com/marracheco/next-cat-feeder/blob/main/public/images/screenshots/empty.png?raw=true)
+
 ## Getting Started
 
 First, run the development server:
