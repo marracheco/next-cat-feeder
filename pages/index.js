@@ -52,7 +52,7 @@ const weekdayOptions = [
 ];
 
 const defaultValues = {
-  name: "test",
+  name: "",
   weekday: [weekdayOptions[6], weekdayOptions[0]],
   hour: [hourOptions[8]],
   minute: [minuteOptions[2]],
