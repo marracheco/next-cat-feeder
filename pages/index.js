@@ -197,9 +197,9 @@ export default function Home() {
                 <h2 className="h4 mb-1">{item.name}</h2>
                 <small>{cronstrue.toString(item.schedule)}</small>
                 <div className="mt-2 text-right">
-                  {/* <Button variant="secondary" size="sm">
+                  <Button variant="secondary" size="sm">
                     Edit
-                  </Button> */}
+                  </Button>
                   <Button
                     variant="danger"
                     size="sm"
@@ -299,7 +299,7 @@ export default function Home() {
             <Button
               type="submit"
               variant="secondary"
-              disabled={Object.keys(errors)?.length || isSubmitting}
+              disabled={Object.keys(errors ?? {})?.length || isSubmitting}
             >
               Save Changes
             </Button>
